@@ -15,6 +15,7 @@ contract Domains is ERC721URIStorage {
   Counters.Counter private _tokenIds;
 
   string public tld;
+  address payable public owner;
 
   mapping(string => address) public domains;
   mapping(string => string) public records;
@@ -23,6 +24,7 @@ contract Domains is ERC721URIStorage {
   string svgPartTwo = '</text></svg>';
 
   constructor(string memory _tld) payable ERC721("Bakchod Name Service", "BNS") {
+    owner = payable(msg.sender);
     tld = _tld;
     console.log("%s name service deployed", tld);
   }
@@ -107,4 +109,21 @@ contract Domains is ERC721URIStorage {
   function getRecord(string calldata name) public view returns (string memory) {
     return records[name];
   }
+
+
+  modifier onlyOwner() {
+    require(isOwner());
+    _;
+  }
+
+  function isOwner() public view returns (bool) {
+    return msg.sender == owner;
+  }
+
+  function withdraw() public onlyOwner {
+    uint amount = address(this).balance;
+    
+    (bool success, ) = msg.sender.call{value: amount}("");
+    require(success, "Failed to withdraw Matic");
+  } 
 }
